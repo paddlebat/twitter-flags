@@ -1,0 +1,12 @@
+{
+  "addons": {
+    "x-account-flags@paddlebat.github.io": {
+      "updates": [
+        {
+          "version": "0.1.0",
+          "update_link": "https://github.com/paddlebat/twitter-flags/releases/download/v0.1.0/x_account_flags-0.1.0.xpi"
+        }
+      ]
+    }
+  }
+}

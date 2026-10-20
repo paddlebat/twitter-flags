@@ -1,0 +1,45 @@
+{
+  "manifest_version": 3,
+  "name": "X Account Flags",
+  "version": "0.1.0",
+  "description": "Private notes and flags on X/Twitter accounts. Badges wherever a flagged account appears. All UI lives in the page.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://x.com/*",
+    "https://*.x.com/*",
+    "https://twitter.com/*",
+    "https://*.twitter.com/*"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "x-account-flags@paddlebat.github.io",
+      "strict_min_version": "128.0",
+      "update_url": "https://raw.githubusercontent.com/paddlebat/twitter-flags/main/updates.json"
+    },
+    "gecko_android": {}
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://*.x.com/*",
+        "https://twitter.com/*",
+        "https://*.twitter.com/*"
+      ],
+      "js": [
+        "src/storage.js",
+        "src/dom.js",
+        "src/ui.js",
+        "src/badges.js",
+        "src/hooks.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ]
+}

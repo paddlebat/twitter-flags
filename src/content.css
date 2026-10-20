@@ -1,0 +1,62 @@
+/* Badges and controls injected into X's own DOM. Floating UI is in a Shadow DOM (see ui.js). */
+
+.xf-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  margin: 0 4px;
+  line-height: 0;
+  vertical-align: middle;
+  cursor: pointer;
+  flex-shrink: 0;
+  align-self: center;   /* never stretch inside a flex column */
+  user-select: none;
+  text-decoration: none;
+}
+.xf-badge svg { display: block; }
+.xf-badge:hover { filter: brightness(1.15); }
+
+/* "Flag account" item cloned into X's … menu. X applies hover via JS, so we add our own. */
+[data-testid="xf-flag"] { cursor: pointer; }
+[data-testid="xf-flag"]:hover,
+[data-testid="xf-flag"]:focus-visible { background-color: rgba(128, 128, 128, 0.15) !important; outline: none; }
+.xf-menu-item--plain { display: flex; align-items: center; gap: 12px; padding: 12px 16px; font: 700 15px/20px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+.xf-menu-item--warning svg  { color: #e3b341; }
+.xf-menu-item--positive svg { color: #2e9e5b; }
+.xf-menu-item--neutral svg  { color: #7a7f85; }
+.xf-menu-item--blocked svg,
+.xf-menu-item--muted svg    { color: #a0423b; }
+
+/* "Flags" entry cloned into the left sidebar nav. X applies hover via JS, so add our own. */
+[data-testid="xf-nav"] { cursor: pointer; text-decoration: none; }
+[data-testid="xf-nav"]:hover > div,
+[data-testid="xf-nav"]:focus-visible > div { background-color: rgba(128, 128, 128, 0.15) !important; }
+
+/* Flag button in a profile header, placed before the "…" button. */
+.xf-profile-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 34px;
+  height: 34px;
+  margin: 0 8px 12px 0;
+  padding: 0;
+  border: 1px solid #cfd9de;
+  border-radius: 9999px;
+  background: transparent;
+  color: #0f1419;
+  cursor: pointer;
+}
+.xf-profile-btn:hover { background: rgba(15, 20, 25, 0.1); }
+html.xf-dark .xf-profile-btn { border-color: #536471; color: #eff3f4; }
+html.xf-dark .xf-profile-btn:hover { background: rgba(239, 243, 244, 0.1); }
+.xf-profile-btn--warning  { color: #e3b341 !important; border-color: #e3b341 !important; }
+.xf-profile-btn--positive { color: #2e9e5b !important; border-color: #2e9e5b !important; }
+.xf-profile-btn--neutral  { color: #7a7f85 !important; border-color: #7a7f85 !important; }
+.xf-profile-btn--blocked,
+.xf-profile-btn--muted    { color: #a0423b !important; border-color: #a0423b !important; }
