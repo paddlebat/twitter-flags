@@ -49,7 +49,7 @@ window.XF = window.XF || {};
     }
 
     const blockItem = t.closest(sel.block);
-    if (blockItem) {
+    if (blockItem && !isUndo(blockItem)) {
       pendingBlock = {
         handle: handleFromText(blockItem.textContent) || ctxHandle(),
         link: ctxLink(),
@@ -59,7 +59,7 @@ window.XF = window.XF || {};
     }
 
     const muteItem = t.closest(sel.mute);
-    if (muteItem) {
+    if (muteItem && !isUndo(muteItem)) {
       const handle = handleFromText(muteItem.textContent) || ctxHandle();
       const link = ctxLink();
       if (handle) setTimeout(() => XF.ui.openModal({ handle, mode: 'mute', link }), 400);
@@ -100,8 +100,14 @@ window.XF = window.XF || {};
   // A menu offering "Unblock"/"Unmute" proves the account is already blocked or
   // muted. Record that so older blocks get a badge without redoing them.
   // Never overrides a flag the user chose; blocked takes precedence over muted.
+  // X may reuse the "block"/"mute" testids and only change the label to
+  // "Unblock @x"/"Unmute @x", so check the label as well as the testid.
+  const isUndo = (el) => /^\s*un(block|mute)\b/i.test(el.textContent || '');
+
   function recordExistingAction(menu, handle) {
-    recordState(handle, !!menu.querySelector(sel.unblock), !!menu.querySelector(sel.unmute));
+    const has = (testSel, undoSel) =>
+      !!menu.querySelector(undoSel) || [...menu.querySelectorAll(testSel)].some(isUndo);
+    recordState(handle, has(sel.block, sel.unblock), has(sel.mute, sel.unmute));
   }
 
   function recordState(handle, blocked, muted) {
