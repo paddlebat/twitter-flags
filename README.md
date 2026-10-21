@@ -49,6 +49,8 @@ In the modal, each note is a card with its own text and link. "+ Add note" appen
 
 Export produces a JSON file you can import on another device. Import merges by default (newer `updatedAt` wins) or replaces everything when the checkbox is ticked.
 
+Cross-device sync is not built yet; options, a recommended design and security notes are in `docs/sync-decision.md`.
+
 Sync: Brave Sync does not carry extension storage, and `chrome.storage.sync` behaves like local storage in Brave, so there is no free cross-device sync. The storage backend is isolated in `src/storage.js` (one `area` constant) if you want to try `chrome.storage.sync` in Chrome (100 KB quota, ~500 small entries) or wire up something else later.
 
 ## Android (Firefox)

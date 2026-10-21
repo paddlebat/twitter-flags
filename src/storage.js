@@ -19,6 +19,16 @@ window.XF = window.XF || {};
   const HANDLE_RE = /^[A-Za-z0-9_]{1,15}$/;
 
   const state = { accounts: {}, loaded: false };
+  // Only http(s) links are kept. Anything else (javascript:, data:, …) from a
+  // tampered import or sync file is dropped so it can never run on click.
+  function safeLink(v) {
+    const s = String(v || '').trim();
+    if (!s) return '';
+    try {
+      const u = new URL(s);
+      return (u.protocol === 'https:' || u.protocol === 'http:') ? u.href : '';
+    } catch { return ''; }
+  }
   const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const listeners = new Set();
 
@@ -42,7 +52,7 @@ window.XF = window.XF || {};
       .map((n) => ({
         id: typeof n.id === 'string' && n.id ? n.id : uid(),
         text: typeof n.text === 'string' ? n.text.trim() : '',
-        link: typeof n.link === 'string' ? n.link.trim() : '',
+        link: safeLink(n.link),
         createdAt: n.createdAt || n.updatedAt || now,
         updatedAt: n.updatedAt || n.createdAt || now,
       }))
@@ -105,7 +115,7 @@ window.XF = window.XF || {};
     const notes = [];
     for (const n of Array.isArray(entry.notes) ? entry.notes : []) {
       const text = String((n && n.text) || '').trim();
-      const link = String((n && n.link) || '').trim();
+      const link = safeLink(n && n.link);
       if (!text && !link) continue;
       const old = n.id && prevNotes.get(n.id);
       if (old && old.text === text && old.link === link) { notes.push(old); continue; }

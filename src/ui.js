@@ -233,7 +233,7 @@ window.XF = window.XF || {};
 
   // While debugging selectors, keep the floating button on every page.
   // Set to false to go back to showing it only when no nav entry exists.
-  const ALWAYS_SHOW_LAUNCHER = true;
+  const ALWAYS_SHOW_LAUNCHER = false;
 
   // The floating button is only a fallback for layouts without the sidebar nav.
   function setLauncherVisible(visible) {
