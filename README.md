@@ -119,6 +119,7 @@ src/ui.js          Shadow DOM: modal, tooltip, manager panel, launcher, toasts
 src/badges.js      Finds names/handles, places badges, tooltip events
 src/hooks.js       Block/mute detection, "Flag account" menu item, profile button
 src/content.js     Entry: MutationObserver, periodic rescans, URL change handling
+src/theme-color.js Keeps the browser/system bar colour matched to X's theme (phone)
 src/content.css    Badge, menu item and profile button styles (inside X's DOM)
 build.sh           Zips manifest + src into dist/ for upload
 updates.json       Firefox self-hosted update manifest (served raw from GitHub)

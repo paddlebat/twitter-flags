@@ -8,6 +8,7 @@
     return;
   }
   XF.ui.init();
+  try { XF.themeColor.start(); } catch (e) { console.warn('[XF] theme-color', e); }
   XF.badges.installEvents();
   XF.hooks.install();
 
