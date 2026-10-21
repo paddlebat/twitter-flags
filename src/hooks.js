@@ -201,10 +201,12 @@ window.XF = window.XF || {};
     try { injectDrawerItem(node); } catch (e) { console.warn('[XF] drawer inject', e); }
   }
 
-  // Remember, per device, that the mobile drawer entry works so the floating
-  // fallback button can stay hidden there.
+  // Remember, per device, that the mobile drawer entry has been used, so the
+  // floating fallback button can stay hidden there. Set only on a real tap:
+  // insertion alone proved unreliable (0.2.1 hid the button with no entry).
+  const DRAWER_KEY = 'xf_drawer_used';
   function drawerKnownGood() {
-    try { return localStorage.getItem('xf_drawer_ok') === '1'; } catch { return false; }
+    try { localStorage.removeItem('xf_drawer_ok'); return localStorage.getItem(DRAWER_KEY) === '1'; } catch { return false; }
   }
   function updateLauncherVisibility() {
     const sidebar = document.getElementById('xf-nav-item');
@@ -247,12 +249,15 @@ window.XF = window.XF || {};
     if (!template || template.closest(sel.primaryNav)) return;
     const item = makeNavClone(template, 'Flags', 'xf-drawer');
     item.id = 'xf-drawer-item';
-    const open = (e) => { e.preventDefault(); e.stopPropagation(); closeMenus(template); setTimeout(() => XF.ui.openManager(), 80); };
+    const open = (e) => {
+      e.preventDefault(); e.stopPropagation();
+      try { localStorage.setItem(DRAWER_KEY, '1'); } catch { /* ignore */ }
+      closeMenus(template);
+      setTimeout(() => { XF.ui.openManager(); updateLauncherVisibility(); }, 80);
+    };
     item.addEventListener('click', open, true);
     item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }, true);
     template.parentNode.insertBefore(item, template.nextSibling);
-    try { localStorage.setItem('xf_drawer_ok', '1'); } catch { /* ignore */ }
-    updateLauncherVisibility();
   }
 
   function ensureProfileButton() {

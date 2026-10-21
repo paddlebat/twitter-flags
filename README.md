@@ -68,7 +68,7 @@ Each release:
 First install on the phone: open the `.xpi` link from the GitHub release in Firefox, or download it and use "Install extension from file". Approve access to x.com when asked. After that, Firefox checks `updates.json` on its own and installs new versions; Settings → Extensions → the add-on → "Check for updates" forces it.
 
 Notes:
-- The phone layout has no sidebar. The manager is a **Flags** entry in the account drawer (tap your avatar). The floating ⚑ button shows until that drawer entry has been seen once on the device.
+- The phone layout has no sidebar. The manager is a **Flags** entry in the account drawer (tap your avatar). The floating ⚑ button shows until that drawer entry has been tapped once on the device.
 - The phone layout is X's responsive mode: narrow a desktop window below ~500px to reproduce it with DevTools.
 - `host_permissions` is listed in the manifest so Firefox asks for x.com access at install instead of leaving it off. Chromium shows the same request.
 - `web-ext lint --self-hosted` passes (needs Node 18+; `~/.nvm/versions/node/v20.20.1/bin` has one). The innerHTML warnings it prints are advisory; all dynamic values go through the escape helper in `ui.js`.
