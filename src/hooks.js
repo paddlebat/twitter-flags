@@ -105,9 +105,12 @@ window.XF = window.XF || {};
   const isUndo = (el) => /^\s*un(block|mute)\b/i.test(el.textContent || '');
 
   function recordExistingAction(menu, handle) {
-    const has = (testSel, undoSel) =>
-      !!menu.querySelector(undoSel) || [...menu.querySelectorAll(testSel)].some(isUndo);
-    recordState(handle, has(sel.block, sel.unblock), has(sel.mute, sel.unmute));
+    // Any menu row labelled "Unblock …"/"Unmute …" counts, whatever its testid.
+    const rows = [...menu.querySelectorAll(`${sel.menuItem}, [role="menuitem"], ${sel.actionItems}`)];
+    const labelled = (re) => rows.some((r) => re.test(r.textContent || ''));
+    const blocked = !!menu.querySelector(sel.unblock) || labelled(/^\s*unblock\b/i);
+    const muted = !!menu.querySelector(sel.unmute) || labelled(/^\s*unmute\b/i);
+    recordState(handle, blocked, muted);
   }
 
   function recordState(handle, blocked, muted) {
