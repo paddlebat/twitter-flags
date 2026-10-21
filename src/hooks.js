@@ -101,8 +101,10 @@ window.XF = window.XF || {};
   // muted. Record that so older blocks get a badge without redoing them.
   // Never overrides a flag the user chose; blocked takes precedence over muted.
   function recordExistingAction(menu, handle) {
-    const blocked = !!menu.querySelector(sel.unblock);
-    const muted = !!menu.querySelector(sel.unmute);
+    recordState(handle, !!menu.querySelector(sel.unblock), !!menu.querySelector(sel.unmute));
+  }
+
+  function recordState(handle, blocked, muted) {
     if (!blocked && !muted) return;
     const flag = blocked ? 'blocked' : 'muted';
     const cur = XF.store.get(handle);
@@ -296,6 +298,14 @@ window.XF = window.XF || {};
     const existingBtn = document.getElementById('xf-profile-btn');
     if (!pathHandle || !actions) { if (existingBtn) existingBtn.remove(); return; }
     const handle = profileHandleFromPage() || pathHandle;
+    // The header's own button row shows "Blocked" / an unmute icon for accounts
+    // already blocked/muted. Look only in that row, not the timeline below.
+    const headerRow = actions.parentElement && actions.parentElement.parentElement;
+    if (headerRow) {
+      recordState(handle,
+        !!headerRow.querySelector(sel.profileUnblock),
+        !!headerRow.querySelector(sel.profileUnmute));
+    }
     const entry = XF.store.get(handle);
     const flag = entry ? entry.flag : '';
     if (existingBtn && existingBtn.isConnected && existingBtn.nextElementSibling === actions

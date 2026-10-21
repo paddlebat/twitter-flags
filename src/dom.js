@@ -28,6 +28,9 @@ window.XF = window.XF || {};
     drawerLink: '[role="dialog"] a[href]:has(svg[data-testid="icon"]), a[data-testid="settings"], a[href="/i/bookmarks"], a[href="/settings"]',
     actionItems: '[data-testid="block"], [data-testid="unblock"], [data-testid="mute"], [data-testid="unmute"]',
     layers: '#layers',
+    // Profile header buttons on an account you already blocked/muted, e.g. "123-unblock".
+    profileUnblock: '[data-testid$="-unblock"]',
+    profileUnmute: '[data-testid$="-unmute"]',
   };
 
   // Top-level paths that look like handles but are not profiles.
