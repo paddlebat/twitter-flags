@@ -168,6 +168,7 @@ window.XF = window.XF || {};
     launcher = el(`<button class="launcher" type="button" title="Account flags: manage, export, import">⚑<span class="launcher-count"></span></button>`);
     launcher.addEventListener('click', () => openManager());
     root.appendChild(launcher);
+    root.addEventListener('click', onShadowLinkClick);
     updateLauncher();
     applyTheme();
     setInterval(applyTheme, 5000);
@@ -176,6 +177,42 @@ window.XF = window.XF || {};
     document.addEventListener('click', (e) => {
       if (tipPinned && !(e.target && e.target.closest && e.target.closest('.xf-badge'))) hideTooltip(true);
     }, true);
+  }
+
+  // Navigate inside the X single-page app instead of opening a new window.
+  // Pushes the URL and fires popstate, which X's router listens to; if the
+  // target hasn't rendered shortly after, fall back to a normal load.
+  function navigate(url) {
+    let u;
+    try { u = new URL(url, location.origin); } catch { return; }
+    const sameApp = u.origin === location.origin || /^https:\/\/(www\.)?(x|twitter)\.com$/.test(u.origin);
+    if (!sameApp) { window.open(u.href, '_blank', 'noopener'); return; }
+    const path = u.pathname + u.search + u.hash;
+    closeManager();
+    hideTooltip(true);
+    try {
+      history.pushState({}, '', path);
+      window.dispatchEvent(new PopStateEvent('popstate', { state: {} }));
+    } catch {
+      location.assign(path);
+      return;
+    }
+    const status = /\/status\/(\d+)/.exec(u.pathname);
+    setTimeout(() => {
+      if (location.pathname !== u.pathname) return; // X moved on (redirect etc.)
+      const rendered = status
+        ? document.querySelector(`a[href*="/status/${status[1]}"], article`)
+        : document.querySelector('main');
+      if (!rendered) location.assign(path);
+    }, 1200);
+  }
+
+  function onShadowLinkClick(e) {
+    const a = e.target && e.target.closest && e.target.closest('a[href]');
+    if (!a || a.target !== '_blank') return;
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button === 1) return; // let modifier clicks open new tabs
+    e.preventDefault();
+    navigate(a.href);
   }
 
   function updateLauncher() {
@@ -409,7 +446,7 @@ window.XF = window.XF || {};
         <div class="item" data-handle="${esc(e.handle)}">
           <span class="chip" title="${esc(FLAGS[e.flag].label)}">${XF.dom.badgeSVG(e.flag, 18)}</span>
           <div class="item-main">
-            <a class="item-handle" href="${location.origin}/${esc(e.handle)}">@${esc(e.handle)}</a>
+            <a class="item-handle" href="${location.origin}/${esc(e.handle)}" target="_blank" rel="noopener noreferrer">@${esc(e.handle)}</a>
             <span class="meta"> · ${esc(FLAGS[e.flag].label)} · ${fmtDate(e.updatedAt)}</span>
             ${e.notes.map((n) => `
               ${n.text ? `<div class="item-note">${esc(n.text)}</div>` : ''}
@@ -485,5 +522,5 @@ window.XF = window.XF || {};
     search.focus();
   }
 
-  XF.ui = { init, openModal, closeModal, showTooltip, scheduleHideTooltip, hideTooltip, openManager, closeManager, toast, updateLauncher, setLauncherVisible, applyTheme };
+  XF.ui = { init, openModal, closeModal, showTooltip, scheduleHideTooltip, hideTooltip, openManager, closeManager, toast, updateLauncher, setLauncherVisible, applyTheme, navigate };
 })();

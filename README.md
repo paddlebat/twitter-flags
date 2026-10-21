@@ -24,6 +24,8 @@ After editing code: click the reload icon on the extension card, then reload the
 | Everywhere a name/handle appears | Badge: `!` yellow warning, `+` green positive, `•` gray neutral, `B` / `M` dark red for blocked/muted. Hover or click for all notes with links and dates, and an Edit button. |
 | **Flags** in the left sidebar (or ⚑ bottom-left fallback) | Search, edit, delete, Export file, Copy JSON, Import (merge or replace), Delete all. |
 
+Links in the tooltip and manager open inside the X app (no new window) when they point at x.com; ⌘/Ctrl-click still opens a new tab. Other sites open in a new window.
+
 Modal shortcuts: `⌘/Ctrl+Enter` saves, `Esc` skips/cancels. The modal never blocks X's own block/mute; it opens ~400 ms after X handled the click.
 
 ## Data
@@ -66,7 +68,8 @@ Each release:
 First install on the phone: open the `.xpi` link from the GitHub release in Firefox, or download it and use "Install extension from file". Approve access to x.com when asked. After that, Firefox checks `updates.json` on its own and installs new versions; Settings → Extensions → the add-on → "Check for updates" forces it.
 
 Notes:
-- The phone layout has no sidebar, so the manager opens from the ⚑ button bottom-left.
+- The phone layout has no sidebar. The manager is a **Flags** entry in the account drawer (tap your avatar). The floating ⚑ button shows until that drawer entry has been seen once on the device.
+- The phone layout is X's responsive mode: narrow a desktop window below ~500px to reproduce it with DevTools.
 - `host_permissions` is listed in the manifest so Firefox asks for x.com access at install instead of leaving it off. Chromium shows the same request.
 - `web-ext lint --self-hosted` passes (needs Node 18+; `~/.nvm/versions/node/v20.20.1/bin` has one). The innerHTML warnings it prints are advisory; all dynamic values go through the escape helper in `ui.js`.
 
@@ -89,7 +92,8 @@ Everything DOM-specific is in `src/dom.js`:
 |---|---|
 | Post "…" button | `[data-testid="caret"]` |
 | Profile "…" button | `[data-testid="userActions"]` |
-| Opened menu | `[data-testid="Dropdown"]` with `div[role="menuitem"]` children |
+| Opened menu | `[data-testid="Dropdown"]` (desktop) or whatever `[role="menu"]`/parent holds the Block/Mute item (mobile sheet) |
+| Mobile account drawer | inside `#layers`; template link `a[href="/i/bookmarks"]`, `/i/lists`, Profile, or `/settings` |
 | Block / Mute items | `[data-testid="block"]`, `[data-testid="mute"]` (handle parsed from item text `… @handle`) |
 | Block confirmation | `[data-testid="confirmationSheetConfirm"]` / `…Cancel` |
 | Name block in posts | `[data-testid="User-Name"]` |

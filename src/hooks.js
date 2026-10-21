@@ -79,26 +79,29 @@ window.XF = window.XF || {};
     }
   }
 
-  // Ask X to close its menu. Escape first; then click the backdrop if it is still open.
-  function closeMenus() {
+  // Ask X to close its menu/sheet/drawer. Escape first; then click the
+  // backdrop if it is still open. `menuEl` is any element inside the overlay.
+  function closeMenus(menuEl) {
     const ev = new KeyboardEvent('keydown', { key: 'Escape', code: 'Escape', keyCode: 27, which: 27, bubbles: true, cancelable: true });
     (document.activeElement || document.body).dispatchEvent(ev);
     setTimeout(() => {
-      const dd = document.querySelector(sel.dropdown);
-      if (!dd) return;
-      const layer = dd.closest('#layers > *');
+      const inner = (menuEl && menuEl.isConnected) ? menuEl : document.querySelector(sel.dropdown);
+      if (!inner) return;
+      const layer = inner.closest('#layers > *');
       if (!layer) return;
       for (const d of layer.querySelectorAll('div')) {
-        if (d.contains(dd)) continue;
+        if (d.contains(inner)) continue;
         const cs = getComputedStyle(d);
         if (cs.position === 'fixed' && d.offsetWidth >= innerWidth * 0.9) { d.click(); break; }
       }
     }, 60);
   }
 
+  // `dropdown` is the menu container: the desktop dropdown or, on the phone
+  // layout, the bottom sheet that holds the same Block/Mute items.
   function injectMenuItem(dropdown) {
     if (dropdown.querySelector('[data-testid="xf-flag"]')) return;
-    const actionItem = dropdown.querySelector(`${sel.block}, ${sel.unblock}, ${sel.mute}, ${sel.unmute}`);
+    const actionItem = dropdown.querySelector(sel.actionItems);
     if (!actionItem) return; // not a menu about another account
     const handle = handleFromText(actionItem.textContent) || ctxHandle();
     if (!handle) return;
@@ -139,7 +142,7 @@ window.XF = window.XF || {};
     const activate = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      closeMenus();
+      closeMenus(dropdown);
       setTimeout(() => XF.ui.openModal({ handle, mode: 'flag', link, existing: XF.store.get(handle) }), 80);
     };
     item.addEventListener('click', activate, true);
@@ -152,8 +155,68 @@ window.XF = window.XF || {};
 
   function onAdded(node) {
     if (node.nodeType !== 1 || isOurs(node)) return;
-    const dd = node.matches(sel.dropdown) ? node : node.querySelector(sel.dropdown);
-    if (dd) { try { injectMenuItem(dd); } catch (e) { console.warn('[XF] menu inject', e); } }
+    // Any Block/Mute item appearing means a menu about another account opened
+    // (desktop dropdown or mobile bottom sheet). Inject next to it.
+    const action = node.matches(sel.actionItems) ? node : node.querySelector(sel.actionItems);
+    if (action) {
+      const menu = action.closest('[role="menu"]') || action.closest(sel.dropdown) || action.parentElement;
+      if (menu) { try { injectMenuItem(menu); } catch (e) { console.warn('[XF] menu inject', e); } }
+    }
+    try { injectDrawerItem(node); } catch (e) { console.warn('[XF] drawer inject', e); }
+  }
+
+  // Remember, per device, that the mobile drawer entry works so the floating
+  // fallback button can stay hidden there.
+  function drawerKnownGood() {
+    try { return localStorage.getItem('xf_drawer_ok') === '1'; } catch { return false; }
+  }
+  function updateLauncherVisibility() {
+    const sidebar = document.getElementById('xf-nav-item');
+    XF.ui.setLauncherVisible(!(sidebar && sidebar.isConnected) && !drawerKnownGood());
+  }
+
+  // Clone a nav/drawer link into a "Flags" entry that opens the manager.
+  function makeNavClone(template, label, testid) {
+    const item = template.cloneNode(true);
+    item.removeAttribute('id');
+    item.setAttribute('data-testid', testid);
+    item.setAttribute('data-xf-ui', '1');
+    item.setAttribute('href', '#');
+    item.setAttribute('aria-label', 'Account flags');
+    item.removeAttribute('aria-current');
+    for (const n of item.querySelectorAll('[id]')) n.removeAttribute('id');
+    const svg = item.querySelector('svg');
+    if (svg) {
+      svg.setAttribute('viewBox', '0 0 24 24');
+      svg.innerHTML = '<g><path d="M5 2h2v20H5z M7 3h11l-2.5 5 2.5 5H7z"></path></g>';
+    }
+    const spans = [...item.querySelectorAll('span')].filter((s) => !s.children.length && s.textContent.trim());
+    if (spans.length) {
+      spans[0].textContent = label;
+      for (const s of spans.slice(1)) s.remove();
+    } else {
+      item.textContent = label;
+    }
+    return item;
+  }
+
+  // Mobile layout: the account drawer that slides in from the avatar. It is
+  // rendered in #layers each time it opens, so this runs on every open.
+  function injectDrawerItem(node) {
+    const layers = document.querySelector(sel.layers);
+    if (!layers || !layers.contains(node)) return;
+    const scope = node.closest('#layers > *') || node;
+    if (scope.querySelector('[data-testid="xf-drawer"]')) return;
+    const template = scope.querySelector(sel.drawerLink);
+    if (!template || template.closest(sel.primaryNav)) return;
+    const item = makeNavClone(template, 'Flags', 'xf-drawer');
+    item.id = 'xf-drawer-item';
+    const open = (e) => { e.preventDefault(); e.stopPropagation(); closeMenus(template); setTimeout(() => XF.ui.openManager(), 80); };
+    item.addEventListener('click', open, true);
+    item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }, true);
+    template.parentNode.insertBefore(item, template.nextSibling);
+    try { localStorage.setItem('xf_drawer_ok', '1'); } catch { /* ignore */ }
+    updateLauncherVisibility();
   }
 
   function ensureProfileButton() {
@@ -191,31 +254,15 @@ window.XF = window.XF || {};
   function ensureNavItem() {
     const nav = document.querySelector(sel.primaryNav);
     const existing = document.getElementById('xf-nav-item');
-    if (!nav) { if (existing) existing.remove(); XF.ui.setLauncherVisible(true); return; }
-    if (existing && existing.isConnected && nav.contains(existing)) { XF.ui.setLauncherVisible(false); return; }
+    if (!nav) { if (existing) existing.remove(); updateLauncherVisibility(); return; }
+    if (existing && existing.isConnected && nav.contains(existing)) { updateLauncherVisibility(); return; }
     if (existing) existing.remove();
 
     const template = nav.querySelector(sel.navProfileLink) || nav.querySelector(sel.navAnyLink);
-    if (!template) { XF.ui.setLauncherVisible(true); return; }
+    if (!template) { updateLauncherVisibility(); return; }
 
-    const item = template.cloneNode(true);
+    const item = makeNavClone(template, 'Flags', 'xf-nav');
     item.id = 'xf-nav-item';
-    item.setAttribute('data-testid', 'xf-nav');
-    item.setAttribute('data-xf-ui', '1');
-    item.setAttribute('href', '#');
-    item.setAttribute('aria-label', 'Account flags');
-    item.removeAttribute('aria-current');
-    for (const n of item.querySelectorAll('[id]')) n.removeAttribute('id');
-    const svg = item.querySelector('svg');
-    if (svg) {
-      svg.setAttribute('viewBox', '0 0 24 24');
-      svg.innerHTML = '<g><path d="M5 2h2v20H5z M7 3h11l-2.5 5 2.5 5H7z"></path></g>';
-    }
-    const spans = [...item.querySelectorAll('span')].filter((s) => !s.children.length && s.textContent.trim());
-    if (spans.length) {
-      spans[0].textContent = 'Flags';
-      for (const s of spans.slice(1)) s.remove();
-    }
     const open = (e) => { e.preventDefault(); e.stopPropagation(); XF.ui.openManager(); };
     item.addEventListener('click', open, true);
     item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }, true);
@@ -224,7 +271,7 @@ window.XF = window.XF || {};
     if (anchor && anchor.parentNode === nav) nav.insertBefore(item, anchor.nextSibling);
     else if (anchor && anchor.parentNode) anchor.parentNode.insertBefore(item, anchor.nextSibling);
     else nav.appendChild(item);
-    XF.ui.setLauncherVisible(false);
+    updateLauncherVisibility();
   }
 
   XF.hooks = { install, onAdded, ensureProfileButton, ensureNavItem, injectMenuItem };

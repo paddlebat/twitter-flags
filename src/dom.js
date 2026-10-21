@@ -22,6 +22,10 @@ window.XF = window.XF || {};
     primaryNav: 'header[role="banner"] nav[role="navigation"]',   // left sidebar: Home, Explore, …
     navProfileLink: '[data-testid="AppTabBar_Profile_Link"]',    // template + insertion point
     navAnyLink: 'a[data-testid^="AppTabBar_"]',
+    // Mobile account drawer (opened from the avatar): links we can clone for a "Flags" entry.
+    drawerLink: 'a[href="/i/bookmarks"], a[href="/i/lists"], a[data-testid="AppTabBar_Profile_Link"], a[href="/settings"]',
+    actionItems: '[data-testid="block"], [data-testid="unblock"], [data-testid="mute"], [data-testid="unmute"]',
+    layers: '#layers',
   };
 
   // Top-level paths that look like handles but are not profiles.

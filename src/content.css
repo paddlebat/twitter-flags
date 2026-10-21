@@ -32,9 +32,11 @@
 .xf-menu-item--muted svg    { color: #a0423b; }
 
 /* "Flags" entry cloned into the left sidebar nav. X applies hover via JS, so add our own. */
-[data-testid="xf-nav"] { cursor: pointer; text-decoration: none; }
+[data-testid="xf-nav"], [data-testid="xf-drawer"] { cursor: pointer; text-decoration: none; }
 [data-testid="xf-nav"]:hover > div,
-[data-testid="xf-nav"]:focus-visible > div { background-color: rgba(128, 128, 128, 0.15) !important; }
+[data-testid="xf-nav"]:focus-visible > div,
+[data-testid="xf-drawer"]:hover > div,
+[data-testid="xf-drawer"]:focus-visible > div { background-color: rgba(128, 128, 128, 0.15) !important; }
 
 /* Flag button in a profile header, placed before the "…" button. */
 .xf-profile-btn {
