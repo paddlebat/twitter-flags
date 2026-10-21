@@ -280,7 +280,7 @@ window.XF = window.XF || {};
             <div class="head"><h2>${esc(title)}</h2><button class="icon-btn" type="button" data-x title="Close">✕</button></div>
             <div class="body">
               ${isAction
-                ? `<div class="row"><span class="chip">${XF.dom.badgeSVG(actionFlag, 18)}</span><span class="hint">The ${opts.mode} already went through. Add a private note on why, or skip.</span></div>`
+                ? ''
                 : `<div class="types">${types.map((t) => `
                     <label class="type"><input type="radio" name="flag" value="${t}" ${t === flag ? 'checked' : ''}><span class="chip">${XF.dom.badgeSVG(t, 18)}</span>${FLAGS[t].label}</label>`).join('')}</div>`}
               <div class="notes" data-notes>${notes.map(noteCard).join('')}${startFresh ? noteCard({ link: opts.link || '' }) : ''}</div>
