@@ -153,8 +153,44 @@ window.XF = window.XF || {};
     else dropdown.appendChild(item);
   }
 
+  // Last few overlays X opened (menus, sheets, drawers), as outlines, for the
+  // "Copy debug info" button. Lets us see phone markup without DevTools.
+  const overlaySnapshots = [];
+  function snapshotOverlay(node) {
+    const layers = document.querySelector(sel.layers);
+    if (!layers || !layers.contains(node)) return;
+    const rootEl = node.closest('#layers > *') || node;
+    setTimeout(() => {
+      if (!rootEl.isConnected) return;
+      const lines = XF.dom.skeleton(rootEl);
+      if (lines.length < 3) return;
+      const text = lines.join('\n');
+      const last = overlaySnapshots[overlaySnapshots.length - 1];
+      if (last && last.text === text) return;
+      overlaySnapshots.push({ at: new Date().toISOString(), path: location.pathname, text });
+      if (overlaySnapshots.length > 6) overlaySnapshots.shift();
+    }, 400);
+  }
+
+  function debugReport() {
+    const parts = [];
+    parts.push(`X Account Flags ${chrome.runtime && chrome.runtime.getManifest ? chrome.runtime.getManifest().version : '?'}`);
+    parts.push(`UA: ${navigator.userAgent}`);
+    parts.push(`Viewport: ${innerWidth}x${innerHeight}  path: ${location.pathname}`);
+    parts.push(`Sidebar nav: ${!!document.querySelector(sel.primaryNav)}  BottomBar: ${!!document.querySelector('[data-testid="BottomBar"]')}  drawerOk: ${drawerKnownGood()}`);
+    const header = document.querySelector('header[role="banner"]');
+    if (header) parts.push('\n== header[role=banner] ==\n' + XF.dom.skeleton(header, 0, [], 8).join('\n'));
+    const bottom = document.querySelector('[data-testid="BottomBar"]');
+    if (bottom) parts.push('\n== BottomBar ==\n' + XF.dom.skeleton(bottom, 0, [], 8).join('\n'));
+    const layers = document.querySelector(sel.layers);
+    if (layers && layers.children.length) parts.push('\n== #layers (open now) ==\n' + XF.dom.skeleton(layers, 0, [], 18).join('\n'));
+    overlaySnapshots.forEach((s, i) => parts.push(`\n== overlay ${i + 1} at ${s.at} on ${s.path} ==\n${s.text}`));
+    return parts.join('\n');
+  }
+
   function onAdded(node) {
     if (node.nodeType !== 1 || isOurs(node)) return;
+    try { snapshotOverlay(node); } catch (e) { /* ignore */ }
     // Any Block/Mute item appearing means a menu about another account opened
     // (desktop dropdown or mobile bottom sheet). Inject next to it.
     const action = node.matches(sel.actionItems) ? node : node.querySelector(sel.actionItems);
@@ -274,5 +310,5 @@ window.XF = window.XF || {};
     updateLauncherVisibility();
   }
 
-  XF.hooks = { install, onAdded, ensureProfileButton, ensureNavItem, injectMenuItem };
+  XF.hooks = { install, onAdded, ensureProfileButton, ensureNavItem, injectMenuItem, debugReport };
 })();

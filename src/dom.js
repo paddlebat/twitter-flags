@@ -107,12 +107,32 @@ window.XF = window.XF || {};
     return `<svg viewBox="0 0 16 16" width="${size}" height="${size}" aria-hidden="true" focusable="false"><circle cx="8" cy="8" r="8" fill="${color}"/>${glyph}</svg>`;
   }
 
+  // Compact outline of a subtree for debugging X's markup on devices without
+  // DevTools: tag + the attributes we key on, first bit of own text, no styles.
+  function skeleton(el, depth = 0, out = [], max = 18) {
+    if (!el || depth > max || out.length > 2500) return out;
+    const attrs = [];
+    for (const a of ['data-testid', 'role', 'href', 'aria-label', 'id', 'type']) {
+      if (el.hasAttribute(a)) attrs.push(`${a}="${el.getAttribute(a).slice(0, 80)}"`);
+    }
+    let own = '';
+    for (const c of el.childNodes) {
+      if (c.nodeType === 3 && c.textContent.trim()) { own = c.textContent.trim().slice(0, 40); break; }
+    }
+    const tag = el.tagName.toLowerCase();
+    if (attrs.length || own || (tag !== 'div' && tag !== 'span')) {
+      out.push(' '.repeat(depth) + `<${tag}${attrs.length ? ' ' + attrs.join(' ') : ''}>` + (own ? ` "${own}"` : ''));
+    }
+    for (const c of el.children) skeleton(c, depth + 1, out, max);
+    return out;
+  }
+
   function isOurs(el) {
     return !!(el && el.closest && el.closest('#xf-root, .xf-badge, [data-xf-ui]'));
   }
 
   XF.dom = {
     sel, handleFromPath, handleFromHref, handleFromText,
-    profileHandleFromPath, profileHandleFromPage, tweetUrlFromArticle, isOurs, badgeSVG,
+    profileHandleFromPath, profileHandleFromPage, tweetUrlFromArticle, isOurs, badgeSVG, skeleton,
   };
 })();

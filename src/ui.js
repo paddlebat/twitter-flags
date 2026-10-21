@@ -399,6 +399,23 @@ window.XF = window.XF || {};
     tipBadge = null;
   }
 
+  // Plain text in a dialog, for when the clipboard is unavailable.
+  function showTextDialog(title, text) {
+    const wrap = el(`
+      <div class="backdrop" data-textdialog>
+        <div class="modal">
+          <div class="head"><h2>${esc(title)}</h2><button class="icon-btn" type="button" data-x>✕</button></div>
+          <div class="body"><textarea rows="14" readonly style="font-family: ui-monospace, Menlo, monospace; font-size: 11px;"></textarea><span class="hint">Select all and copy.</span></div>
+        </div>
+      </div>`);
+    wrap.querySelector('textarea').value = text;
+    wrap.querySelector('[data-x]').addEventListener('click', () => wrap.remove());
+    wrap.addEventListener('click', (e) => { if (e.target === wrap) wrap.remove(); });
+    root.appendChild(wrap);
+    const ta = wrap.querySelector('textarea');
+    ta.focus(); ta.select();
+  }
+
   // ---------- Manager panel (list / export / import) ----------
 
   function closeManager() {
@@ -424,6 +441,7 @@ window.XF = window.XF || {};
           <div class="list" data-list></div>
           <div class="panel-foot">
             <span class="hint">Stored locally in this browser profile only. Export to back up or move devices.</span>
+            <button class="btn btn--small" type="button" data-debug title="Copies an outline of X's current page structure, for fixing selectors">Copy debug info</button>
             <button class="btn btn--danger btn--small" type="button" data-clear>Delete all</button>
           </div>
         </div>
@@ -508,6 +526,11 @@ window.XF = window.XF || {};
         toast('Import failed: ' + e.message, 3500);
       }
       file.value = '';
+    });
+    wrap.querySelector('[data-debug]').addEventListener('click', async () => {
+      const text = XF.hooks.debugReport();
+      try { await navigator.clipboard.writeText(text); toast('Debug info copied. Paste it into a message.'); }
+      catch { showTextDialog('Debug info', text); }
     });
     const clearBtn = wrap.querySelector('[data-clear]');
     clearBtn.addEventListener('click', async () => {
