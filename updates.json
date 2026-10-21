@@ -9,6 +9,10 @@
         {
           "version": "0.2.1",
           "update_link": "https://github.com/paddlebat/twitter-flags/releases/download/v0.2.1/x_account_flags-0.2.1.xpi"
+        },
+        {
+          "version": "0.2.2",
+          "update_link": "https://github.com/paddlebat/twitter-flags/releases/download/v0.2.2/x_account_flags-0.2.2.xpi"
         }
       ]
     }
