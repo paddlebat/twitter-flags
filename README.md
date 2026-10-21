@@ -21,6 +21,7 @@ After editing code: click the reload icon on the extension card, then reload the
 | Profile header | Small ⚑ button to the left of the "…" button. Coloured when the account is flagged. |
 | Block → confirm | After X's own confirmation, a modal asks for a reason and link (prefilled with the post URL when started from a post). Save or Skip. |
 | Mute | Same modal right after the click. |
+| Existing blocks/mutes | Opening the "…" menu on an account that shows Unblock or Unmute records it as blocked/muted, so older blocks get a badge. Never overrides a Warning/Positive/Neutral flag. |
 | Everywhere a name/handle appears | Badge: `!` yellow warning, `+` green positive, `•` gray neutral, `B` / `M` dark red for blocked/muted. Hover or click for all notes with links and dates, and an Edit button. |
 | **Flags** in the left sidebar (or ⚑ bottom-left fallback) | Search, edit, delete, Export file, Copy JSON, Import (merge or replace), Delete all. |
 

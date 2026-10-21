@@ -100,8 +100,9 @@ window.XF = window.XF || {};
     warning: '<rect x="7" y="3.5" width="2" height="6" rx="1" fill="#1a1a1a"/><circle cx="8" cy="12" r="1.25" fill="#1a1a1a"/>',
     positive: '<path d="M7 4h2v3h3v2H9v3H7V9H4V7h3z" fill="#fff"/>',
     neutral: '<circle cx="8" cy="8" r="2.4" fill="#fff"/>',
-    blocked: '<text x="8" y="8.6" text-anchor="middle" dominant-baseline="central" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="700" fill="#fff">B</text>',
-    muted: '<text x="8" y="8.6" text-anchor="middle" dominant-baseline="central" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif" font-size="10.5" font-weight="700" fill="#fff">M</text>',
+    // Letters as strokes rather than <text>, so they centre the same in every font.
+    blocked: '<path d="M5.6 4.5V11.5M5.6 4.5H8.5a1.75 1.75 0 0 1 0 3.5H5.6M5.6 8H8.9a1.75 1.75 0 0 1 0 3.5H5.6" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
+    muted: '<path d="M4.4 11.5V4.5L8 9.2L11.6 4.5V11.5" fill="none" stroke="#fff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
   };
   function badgeSVG(flag, size = 16) {
     const color = BADGE_COLORS[flag] || BADGE_COLORS.neutral;

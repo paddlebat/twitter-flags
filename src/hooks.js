@@ -97,6 +97,21 @@ window.XF = window.XF || {};
     }, 60);
   }
 
+  // A menu offering "Unblock"/"Unmute" proves the account is already blocked or
+  // muted. Record that so older blocks get a badge without redoing them.
+  // Never overrides a flag the user chose; blocked takes precedence over muted.
+  function recordExistingAction(menu, handle) {
+    const blocked = !!menu.querySelector(sel.unblock);
+    const muted = !!menu.querySelector(sel.unmute);
+    if (!blocked && !muted) return;
+    const flag = blocked ? 'blocked' : 'muted';
+    const cur = XF.store.get(handle);
+    if (cur && (cur.flag === flag || cur.flag === 'blocked' || !['muted'].includes(cur.flag))) return;
+    XF.store.save({ handle, flag, notes: cur ? cur.notes : [] })
+      .then(() => XF.ui.toast(`Recorded existing ${flag === 'blocked' ? 'block' : 'mute'} for @${handle}`))
+      .catch((e) => console.warn('[XF] record existing', e));
+  }
+
   // `dropdown` is the menu container: the desktop dropdown or, on the phone
   // layout, the bottom sheet that holds the same Block/Mute items.
   function injectMenuItem(dropdown) {
@@ -105,6 +120,7 @@ window.XF = window.XF || {};
     if (!actionItem) return; // not a menu about another account
     const handle = handleFromText(actionItem.textContent) || ctxHandle();
     if (!handle) return;
+    recordExistingAction(dropdown, handle);
     const existing = XF.store.get(handle);
     const label = existing ? `Edit flag for @${handle}` : `Flag @${handle}`;
 
