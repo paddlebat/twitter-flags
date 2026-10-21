@@ -204,6 +204,13 @@ window.XF = window.XF || {};
     parts.push(`Sidebar nav: ${!!document.querySelector(sel.primaryNav)}  BottomBar: ${!!document.querySelector('[data-testid="BottomBar"]')}  drawerOk: ${drawerKnownGood()}`);
     const header = document.querySelector('header[role="banner"]');
     if (header) parts.push('\n== header[role=banner] ==\n' + XF.dom.skeleton(header, 0, [], 8).join('\n'));
+    const ua = document.querySelector(sel.userActions);
+    if (ua) {
+      let box = ua;
+      for (let i = 0; i < 4 && box.parentElement; i++) box = box.parentElement;
+      parts.push('\n== profile header (around userActions) ==\n' + XF.dom.skeleton(box, 0, [], 10).join('\n'));
+    }
+    parts.push(`Stored entry for this profile: ${JSON.stringify(XF.store.get(profileHandleFromPage() || '') || null)}`);
     const bottom = document.querySelector('[data-testid="BottomBar"]');
     if (bottom) parts.push('\n== BottomBar ==\n' + XF.dom.skeleton(bottom, 0, [], 8).join('\n'));
     const layers = document.querySelector(sel.layers);
