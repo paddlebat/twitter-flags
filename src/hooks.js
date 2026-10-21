@@ -9,8 +9,9 @@ window.XF = window.XF || {};
 
   // Where the last "…" click came from, so we know which tweet to link.
   const ctx = { article: null, source: null, at: 0 };
-  // A Block click waiting for its confirmation dialog.
+  // A Block / Unblock click waiting for its confirmation dialog.
   let pendingBlock = null;
+  let pendingUnblock = null;
 
   function ctxLink() {
     if (ctx.source === 'tweet' && ctx.article && ctx.article.isConnected && Date.now() - ctx.at < 120000) {
@@ -48,6 +49,25 @@ window.XF = window.XF || {};
       return;
     }
 
+    // Unblock from a menu, or the red "Blocked" button on a profile header.
+    const unblockEl = t.closest(sel.unblock) || t.closest(sel.profileUnblock)
+      || ((t.closest(sel.block) && isUndo(t.closest(sel.block))) ? t.closest(sel.block) : null);
+    if (unblockEl) {
+      pendingUnblock = {
+        handle: handleFromText(unblockEl.textContent) || ctxHandle() || profileHandleFromPage(),
+        at: Date.now(),
+      };
+      return;
+    }
+    const unmuteEl = t.closest(sel.unmute) || t.closest(sel.profileUnmute)
+      || ((t.closest(sel.mute) && isUndo(t.closest(sel.mute))) ? t.closest(sel.mute) : null)
+      || (() => { const r = t.closest('[role="menuitem"]'); return r && /^\s*unmute\b/i.test(r.textContent || '') ? r : null; })();
+    if (unmuteEl) {
+      const handle = handleFromText(unmuteEl.textContent) || ctxHandle() || profileHandleFromPage();
+      if (handle) setTimeout(() => resetAction(handle, 'muted'), 400);
+      return;
+    }
+
     const blockItem = t.closest(sel.block);
     if (blockItem && !isUndo(blockItem)) {
       pendingBlock = {
@@ -67,6 +87,13 @@ window.XF = window.XF || {};
     }
 
     if (t.closest(sel.confirmYes)) {
+      const u = pendingUnblock;
+      pendingUnblock = null;
+      if (u && u.handle && Date.now() - u.at < 120000) {
+        setTimeout(() => resetAction(u.handle, 'blocked'), 400);
+        pendingBlock = null;
+        return;
+      }
       const p = pendingBlock;
       pendingBlock = null;
       if (p && p.handle && Date.now() - p.at < 120000) {
@@ -76,6 +103,7 @@ window.XF = window.XF || {};
     }
     if (t.closest(sel.confirmNo)) {
       pendingBlock = null;
+      pendingUnblock = null;
     }
   }
 
@@ -110,7 +138,26 @@ window.XF = window.XF || {};
     const labelled = (re) => rows.some((r) => re.test(r.textContent || ''));
     const blocked = !!menu.querySelector(sel.unblock) || labelled(/^\s*unblock\b/i);
     const muted = !!menu.querySelector(sel.unmute) || labelled(/^\s*unmute\b/i);
+    // A plain "Block …"/"Mute …" row means that action is not in effect any
+    // more (undone here, on another device, or in X's settings).
+    if (labelled(/^\s*block\b/i)) resetAction(handle, 'blocked', true);
+    if (labelled(/^\s*mute\b/i)) resetAction(handle, 'muted', true);
     recordState(handle, blocked, muted);
+  }
+
+  // Undo a blocked/muted entry: keep it as Neutral if it has notes, otherwise
+  // remove it. Only touches entries whose flag is exactly that action.
+  function resetAction(handle, flag, quiet = false) {
+    const cur = XF.store.get(handle);
+    if (!cur || cur.flag !== flag) return;
+    const word = flag === 'blocked' ? 'block' : 'mute';
+    const p = cur.notes.length
+      ? XF.store.save({ handle: cur.handle, flag: 'neutral', notes: cur.notes })
+      : XF.store.remove(cur.handle);
+    p.then(() => XF.ui.toast(cur.notes.length
+        ? `@${cur.handle} no longer ${flag}; kept notes as Neutral`
+        : `Removed ${word} badge for @${cur.handle}`, quiet ? 2200 : 1800))
+      .catch((e) => console.warn('[XF] reset action', e));
   }
 
   function recordState(handle, blocked, muted) {
@@ -318,9 +365,12 @@ window.XF = window.XF || {};
     // already blocked/muted. Look only in that row, not the timeline below.
     const headerRow = actions.parentElement && actions.parentElement.parentElement;
     if (headerRow) {
-      recordState(handle,
-        !!headerRow.querySelector(sel.profileUnblock),
-        !!headerRow.querySelector(sel.profileUnmute));
+      const isBlocked = !!headerRow.querySelector(sel.profileUnblock);
+      // A Follow/Unfollow button in the header means the account is not blocked.
+      if (!isBlocked && headerRow.querySelector('[data-testid$="-follow"], [data-testid$="-unfollow"]')) {
+        resetAction(handle, 'blocked', true);
+      }
+      recordState(handle, isBlocked, !!headerRow.querySelector(sel.profileUnmute));
     }
     const entry = XF.store.get(handle);
     const flag = entry ? entry.flag : '';
