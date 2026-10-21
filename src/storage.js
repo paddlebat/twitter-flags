@@ -79,11 +79,28 @@ window.XF = window.XF || {};
     return out;
   }
 
+  // Settings live under their own key so they never mix with account data
+  // (and are not part of export/import).
+  const SETTINGS_KEY = 'xf_settings';
+  const settings = { enabled: true };
+  const settingsListeners = new Set();
+  const readSettings = (v) => ({ enabled: !(v && v.enabled === false) });
+
   async function load() {
-    const res = await area.get(KEY);
+    const res = await area.get([KEY, SETTINGS_KEY]);
     state.accounts = sanitize(res && res[KEY]);
+    Object.assign(settings, readSettings(res && res[SETTINGS_KEY]));
     state.loaded = true;
     return state.accounts;
+  }
+
+  function isEnabled() { return settings.enabled; }
+
+  async function setEnabled(on) {
+    if (settings.enabled === !!on) return;
+    settings.enabled = !!on;
+    await area.set({ [SETTINGS_KEY]: { ...settings } });
+    for (const fn of settingsListeners) { try { fn({ ...settings }); } catch (e) { console.error('[XF] settings listener', e); } }
   }
 
   async function persist() {
@@ -178,7 +195,15 @@ window.XF = window.XF || {};
 
   // Picks up changes made from other windows (e.g. PWA window + browser tab).
   api.storage.onChanged.addListener((changes, areaName) => {
-    if (areaName !== AREA_NAME || !changes[KEY]) return;
+    if (areaName !== AREA_NAME) return;
+    if (changes[SETTINGS_KEY]) {
+      const next = readSettings(changes[SETTINGS_KEY].newValue);
+      if (next.enabled !== settings.enabled) {
+        Object.assign(settings, next);
+        for (const fn of settingsListeners) { try { fn({ ...settings }); } catch (e) { console.error('[XF] settings listener', e); } }
+      }
+    }
+    if (!changes[KEY]) return;
     const next = sanitize(changes[KEY].newValue);
     if (JSON.stringify(next) === JSON.stringify(state.accounts)) return;
     state.accounts = next;
@@ -187,6 +212,8 @@ window.XF = window.XF || {};
 
   XF.store = {
     FLAGS, norm, load, get, all, count, save, remove, clear, exportJSON, importJSON,
+    isEnabled, setEnabled,
     onChange: (fn) => { listeners.add(fn); return () => listeners.delete(fn); },
+    onSettingsChange: (fn) => { settingsListeners.add(fn); return () => settingsListeners.delete(fn); },
   };
 })();

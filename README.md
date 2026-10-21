@@ -25,6 +25,7 @@ After editing code: click the reload icon on the extension card, then reload the
 | Blocked / muted entries | Type is fixed in the modal and they can't be deleted from the extension; only unblocking/unmuting on X clears them. Notes stay editable. |
 | Unblock / unmute | Resets the entry: becomes Neutral if it has notes, removed if not. Also reconciles when a menu shows plain "Block"/"Mute" or a profile shows Follow for an entry still marked blocked/muted. |
 | Everywhere a name/handle appears | Badge: `!` yellow warning, `+` green positive, `•` gray neutral, `B` / `M` dark red for blocked/muted. Hover or click for all notes with links and dates, and an Edit button. |
+| "Show flags on X" switch (top of the manager) | Off: no badges, profile button, menu item, block/mute prompts or block/mute detection. The Flags entries and the manager stay so you can turn it back on. Blocks/mutes made while off are picked up later when you open those accounts' menus or profiles. |
 | **Flags** in the left sidebar (or ⚑ bottom-left fallback) | Search, edit and delete flags. The gear opens **Data & tools**: Export file, Copy JSON, Import (merge or replace), Copy debug info, Delete all. |
 
 Links in the tooltip and manager open inside the X app (no new window) when they point at x.com; ⌘/Ctrl-click still opens a new tab. Other sites open in a new window.

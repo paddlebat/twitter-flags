@@ -95,6 +95,14 @@ window.XF = window.XF || {};
     .toolbar { display: flex; gap: 8px; padding: 10px 16px; flex-wrap: wrap; align-items: center; }
     .toolbar input[type=search] { flex: 1 1 160px; }
     .view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .switch-row > span { display: flex; flex-direction: column; gap: 2px; }
+    .switch { appearance: none; -webkit-appearance: none; flex-shrink: 0; width: 40px; height: 24px; border-radius: 12px; background: var(--border); position: relative; cursor: pointer; transition: background .15s; margin: 0; }
+    .switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.3); transition: transform .15s; }
+    .switch:checked { background: var(--accent); }
+    .switch:checked::after { transform: translateX(16px); }
+    .switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .is-off .list, .is-off .toolbar { opacity: .55; }
     .view[hidden], .icon-btn[hidden] { display: none; }
     .icon-btn svg { display: block; margin: auto; }
     .tools { overflow: auto; }
@@ -455,6 +463,10 @@ window.XF = window.XF || {};
             <button class="icon-btn" type="button" data-x title="Close">✕</button>
           </div>
           <div class="view" data-view="list">
+            <label class="switch-row">
+              <span><b>Show flags on X</b><span class="hint" data-enabled-hint></span></span>
+              <input type="checkbox" class="switch" data-enabled>
+            </label>
             <div class="toolbar"><input type="search" placeholder="Search handle, note or link…" data-search></div>
             <div class="list" data-list></div>
           </div>
@@ -540,6 +552,26 @@ window.XF = window.XF || {};
         else { b.dataset.armed = '1'; b.textContent = 'Confirm'; setTimeout(() => { delete b.dataset.armed; b.textContent = 'Delete'; }, 3000); }
       }
     });
+
+    const enabledBox = wrap.querySelector('[data-enabled]');
+    const enabledHint = wrap.querySelector('[data-enabled-hint]');
+    const syncEnabled = () => {
+      const on = XF.store.isEnabled();
+      enabledBox.checked = on;
+      enabledHint.textContent = on
+        ? 'Badges, menu items and block/mute notes are active.'
+        : 'Off. Nothing is shown or recorded on X until you turn this back on.';
+      wrap.querySelector('.panel').classList.toggle('is-off', !on);
+    };
+    enabledBox.addEventListener('change', async () => {
+      await XF.store.setEnabled(enabledBox.checked);
+      syncEnabled();
+      toast(enabledBox.checked ? 'Flags on' : 'Flags off');
+    });
+    const offSettings = XF.store.onSettingsChange(syncEnabled);
+    const observer = new MutationObserver(() => { if (!wrap.isConnected) { offSettings(); observer.disconnect(); } });
+    observer.observe(root, { childList: true });
+    syncEnabled();
 
     search.addEventListener('input', render);
     wrap.querySelector('[data-x]').addEventListener('click', close);

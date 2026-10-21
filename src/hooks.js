@@ -34,6 +34,7 @@ window.XF = window.XF || {};
   }
 
   function onClickCapture(e) {
+    if (!XF.store.isEnabled()) return;
     const t = e.target instanceof Element ? e.target : null;
     if (!t || isOurs(t)) return;
 
@@ -274,7 +275,7 @@ window.XF = window.XF || {};
     try { snapshotOverlay(node); } catch (e) { /* ignore */ }
     // Any Block/Mute item appearing means a menu about another account opened
     // (desktop dropdown or mobile bottom sheet). Inject next to it.
-    const action = node.matches(sel.actionItems) ? node : node.querySelector(sel.actionItems);
+    const action = XF.store.isEnabled() && (node.matches(sel.actionItems) ? node : node.querySelector(sel.actionItems));
     if (action) {
       const menu = action.closest('[role="menu"]') || action.closest(sel.dropdown) || action.parentElement;
       if (menu) { try { injectMenuItem(menu); } catch (e) { console.warn('[XF] menu inject', e); } }
@@ -359,7 +360,7 @@ window.XF = window.XF || {};
     const pathHandle = profileHandleFromPath();
     const actions = document.querySelector(sel.userActions);
     const existingBtn = document.getElementById('xf-profile-btn');
-    if (!pathHandle || !actions) { if (existingBtn) existingBtn.remove(); return; }
+    if (!XF.store.isEnabled() || !pathHandle || !actions) { if (existingBtn) existingBtn.remove(); return; }
     const handle = profileHandleFromPage() || pathHandle;
     // The header's own button row shows "Blocked" / an unmute icon for accounts
     // already blocked/muted. Look only in that row, not the timeline below.

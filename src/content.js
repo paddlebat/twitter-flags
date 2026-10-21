@@ -49,6 +49,20 @@
     XF.ui.updateLauncher();
   });
 
+  // Master switch from the manager. Off: strip everything we put into X's
+  // page except the Flags nav/drawer entries. On: rebuild.
+  XF.store.onSettingsChange(({ enabled }) => {
+    XF.ui.hideTooltip(true);
+    if (enabled) {
+      XF.badges.refreshAll();
+    } else {
+      XF.badges.clearAll();
+      for (const n of document.querySelectorAll('[data-testid="xf-flag"]')) n.remove();
+      XF.ui.closeModal();
+    }
+    XF.hooks.ensureProfileButton();
+  });
+
   // Catch in-place React updates that reuse nodes without adding any.
   setInterval(fullPass, 3000);
 

@@ -104,6 +104,7 @@ window.XF = window.XF || {};
   }
 
   function scan(root) {
+    if (!XF.store.isEnabled()) return;
     if (!root || root.nodeType !== 1) return;
     if (isOurs(root)) return;
     const groups = root.matches(sel.nameGroups) ? [root] : [];
@@ -114,9 +115,13 @@ window.XF = window.XF || {};
     for (const a of anchors) { try { placeStandalone(a); } catch (e) { console.warn('[XF] badge anchor', e); } }
   }
 
-  function refreshAll() {
+  function clearAll() {
     for (const b of document.querySelectorAll('.xf-badge')) b.remove();
     for (const g of document.querySelectorAll('[data-xf-badged]')) delete g.dataset.xfBadged;
+  }
+
+  function refreshAll() {
+    clearAll();
     scan(document.body);
   }
 
@@ -146,5 +151,5 @@ window.XF = window.XF || {};
     }, true);
   }
 
-  XF.badges = { scan, refreshAll, installEvents, groupHandle };
+  XF.badges = { scan, refreshAll, clearAll, installEvents, groupHandle };
 })();
