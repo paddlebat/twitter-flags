@@ -22,8 +22,10 @@ window.XF = window.XF || {};
     primaryNav: 'header[role="banner"] nav[role="navigation"]',   // left sidebar: Home, Explore, …
     navProfileLink: '[data-testid="AppTabBar_Profile_Link"]',    // template + insertion point
     navAnyLink: 'a[data-testid^="AppTabBar_"]',
-    // Mobile account drawer (opened from the avatar): links we can clone for a "Flags" entry.
-    drawerLink: 'a[href="/i/bookmarks"], a[href="/i/lists"], a[data-testid="AppTabBar_Profile_Link"], a[href="/settings"]',
+    // Mobile account drawer (opened from the avatar). Its menu rows are links
+    // with an icon svg; the first one is "Profile", which we insert after.
+    // Later entries are fallbacks if that structure changes.
+    drawerLink: '[role="dialog"] a[href]:has(svg[data-testid="icon"]), a[data-testid="settings"], a[href="/i/bookmarks"], a[href="/settings"]',
     actionItems: '[data-testid="block"], [data-testid="unblock"], [data-testid="mute"], [data-testid="unmute"]',
     layers: '#layers',
   };

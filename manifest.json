@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "X Account Flags",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Private notes and flags on X/Twitter accounts. Badges wherever a flagged account appears. All UI lives in the page.",
   "permissions": [
     "storage"

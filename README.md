@@ -93,7 +93,7 @@ Everything DOM-specific is in `src/dom.js`:
 | Post "…" button | `[data-testid="caret"]` |
 | Profile "…" button | `[data-testid="userActions"]` |
 | Opened menu | `[data-testid="Dropdown"]` (desktop) or whatever `[role="menu"]`/parent holds the Block/Mute item (mobile sheet) |
-| Mobile account drawer | inside `#layers`; template link `a[href="/i/bookmarks"]`, `/i/lists`, Profile, or `/settings` |
+| Mobile account drawer | `[role="dialog"]` inside `#layers`; rows are `a[href]` containing `svg[data-testid="icon"]`, first is Profile; fallback `a[data-testid="settings"]` |
 | Block / Mute items | `[data-testid="block"]`, `[data-testid="mute"]` (handle parsed from item text `… @handle`) |
 | Block confirmation | `[data-testid="confirmationSheetConfirm"]` / `…Cancel` |
 | Name block in posts | `[data-testid="User-Name"]` |
