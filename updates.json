@@ -17,6 +17,10 @@
         {
           "version": "0.3.0",
           "update_link": "https://github.com/paddlebat/twitter-flags/releases/download/v0.3.0/x_account_flags-0.3.0.xpi"
+        },
+        {
+          "version": "0.3.1",
+          "update_link": "https://github.com/paddlebat/twitter-flags/releases/download/v0.3.1/x_account_flags-0.3.1.xpi"
         }
       ]
     }
