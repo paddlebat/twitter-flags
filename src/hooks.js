@@ -215,7 +215,10 @@ window.XF = window.XF || {};
 
   // Clone a nav/drawer link into a "Flags" entry that opens the manager.
   function makeNavClone(template, label, testid) {
-    const item = template.cloneNode(true);
+    return relabelLink(template.cloneNode(true), label, testid);
+  }
+
+  function relabelLink(item, label, testid) {
     item.removeAttribute('id');
     item.setAttribute('data-testid', testid);
     item.setAttribute('data-xf-ui', '1');
@@ -247,7 +250,18 @@ window.XF = window.XF || {};
     if (scope.querySelector('[data-testid="xf-drawer"]')) return;
     const template = scope.querySelector(sel.drawerLink);
     if (!template || template.closest(sel.primaryNav)) return;
-    const item = makeNavClone(template, 'Flags', 'xf-drawer');
+    // Each drawer link sits in its own row wrapper. Climb to the wrapper that
+    // is a sibling of the other rows, clone that, and relabel the link inside.
+    // Stop when the parent also holds links from other rows.
+    let row = template;
+    while (row.parentElement && row.parentElement !== scope
+      && [...row.parentElement.querySelectorAll('a[href]')].every((a) => row.contains(a))) {
+      row = row.parentElement;
+    }
+    const rowClone = row.cloneNode(true);
+    rowClone.setAttribute('data-xf-ui', '1');
+    const cloneLink = rowClone.matches('a[href]') ? rowClone : rowClone.querySelector('a[href]');
+    const item = relabelLink(cloneLink, 'Flags', 'xf-drawer');
     item.id = 'xf-drawer-item';
     const open = (e) => {
       e.preventDefault(); e.stopPropagation();
@@ -257,7 +271,7 @@ window.XF = window.XF || {};
     };
     item.addEventListener('click', open, true);
     item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }, true);
-    template.parentNode.insertBefore(item, template.nextSibling);
+    row.parentNode.insertBefore(rowClone, row.nextSibling);
   }
 
   function ensureProfileButton() {
