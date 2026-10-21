@@ -89,6 +89,12 @@ window.XF = window.XF || {};
     if (isOurs(a) || a.closest(sel.nameGroups)) return;
     // Profile tabs ("Posts") and nav links point at /handle too; skip them.
     if (a.getAttribute('role') === 'tab' || a.closest('[role="tablist"], nav, [role="navigation"], header')) return;
+    // Notification summary lines ("A and B liked your post"): a badge there
+    // breaks the sentence onto two lines. Posts shown on the notifications
+    // page still get badges through their name blocks, and @mentions inside
+    // post text are kept.
+    if (a.closest('[data-testid="notification"]')) return;
+    if (location.pathname.startsWith('/notifications') && !a.closest('[data-testid="tweetText"]')) return;
     const h = handleFromHref(a.href);
     if (!h) return;
     if (a.querySelector('img') || !a.textContent.trim()) return;
