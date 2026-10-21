@@ -94,7 +94,16 @@ window.XF = window.XF || {};
     .tip-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .toolbar { display: flex; gap: 8px; padding: 10px 16px; flex-wrap: wrap; align-items: center; }
     .toolbar input[type=search] { flex: 1 1 160px; }
-    .check { padding: 0 16px 8px; font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: center; cursor: pointer; }
+    .view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+    .view[hidden], .icon-btn[hidden] { display: none; }
+    .icon-btn svg { display: block; margin: auto; }
+    .tools { overflow: auto; }
+    .section { display: flex; flex-direction: column; gap: 8px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+    .section:last-child { border-bottom: 0; }
+    .section h3 { margin: 0; font-size: 15px; font-weight: 700; }
+    .section p { margin: 0; }
+    .section--danger h3 { color: var(--danger); }
+    .check-inline { font-size: 13px; display: flex; gap: 6px; align-items: center; cursor: pointer; }
     .list { flex: 1; overflow: auto; border-top: 1px solid var(--border); }
     .item { display: flex; gap: 10px; padding: 10px 16px; border-bottom: 1px solid var(--border); align-items: flex-start; }
     .item-main { flex: 1; min-width: 0; }
@@ -104,7 +113,6 @@ window.XF = window.XF || {};
     .item-link { font-size: 12px; color: var(--accent); text-decoration: none; word-break: break-all; display: block; }
     .item-actions { display: flex; gap: 6px; }
     .empty { padding: 32px; text-align: center; color: var(--muted); }
-    .panel-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border); }
     .toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--accent); color: #fff; padding: 8px 16px; border-radius: 9999px; font-size: 14px; box-shadow: 0 4px 16px rgba(0,0,0,.3); }
   `;
 
@@ -429,39 +437,74 @@ window.XF = window.XF || {};
     if (m) m.remove();
   }
 
-  function openManager() {
+  const ICON_GEAR = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+  const ICON_BACK = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>';
+
+  // Manager: a list view (search + accounts) and a "Data & tools" view behind
+  // the gear, for occasional actions (backup, restore, debug, delete all).
+  function openManager(view = 'list') {
     closeManager();
     hideTooltip(true);
     const wrap = el(`
       <div class="backdrop" data-manager>
         <div class="panel" role="dialog" aria-modal="true" aria-label="Account flags">
-          <div class="head"><h2>Account flags <span class="meta" data-count></span></h2><button class="icon-btn" type="button" data-x title="Close">✕</button></div>
-          <div class="toolbar">
-            <input type="search" placeholder="Search handle, note or link…" data-search>
-            <button class="btn btn--small" type="button" data-export>Export file</button>
-            <button class="btn btn--small" type="button" data-copy>Copy JSON</button>
-            <button class="btn btn--small" type="button" data-import>Import file…</button>
-            <input type="file" accept=".json,application/json" hidden data-file>
+          <div class="head">
+            <button class="icon-btn" type="button" data-back title="Back" hidden>${ICON_BACK}</button>
+            <h2 data-title></h2>
+            <button class="icon-btn" type="button" data-tools title="Data &amp; tools">${ICON_GEAR}</button>
+            <button class="icon-btn" type="button" data-x title="Close">✕</button>
           </div>
-          <label class="check"><input type="checkbox" data-replace> Replace everything on import (default merges, newest entry wins)</label>
-          <div class="list" data-list></div>
-          <div class="panel-foot">
-            <span class="hint">Stored locally in this browser profile only. Export to back up or move devices.</span>
-            <button class="btn btn--small" type="button" data-debug title="Copies an outline of X's current page structure, for fixing selectors">Copy debug info</button>
-            <button class="btn btn--danger btn--small" type="button" data-clear>Delete all</button>
+          <div class="view" data-view="list">
+            <div class="toolbar"><input type="search" placeholder="Search handle, note or link…" data-search></div>
+            <div class="list" data-list></div>
+          </div>
+          <div class="view tools" data-view="tools" hidden>
+            <section class="section">
+              <h3>Backup</h3>
+              <p class="hint">Flags are stored only in this browser. Save a copy to back up or move them to another device.</p>
+              <div class="row"><button class="btn btn--small" type="button" data-export>Export file</button><button class="btn btn--small" type="button" data-copy>Copy JSON</button></div>
+            </section>
+            <section class="section">
+              <h3>Restore</h3>
+              <p class="hint">Merging keeps the newest version of each account.</p>
+              <label class="check-inline"><input type="checkbox" data-replace> Replace everything instead of merging</label>
+              <div class="row"><button class="btn btn--small" type="button" data-import>Import file…</button></div>
+              <input type="file" accept=".json,application/json" hidden data-file>
+            </section>
+            <section class="section">
+              <h3>Troubleshooting</h3>
+              <p class="hint">Copies an outline of X's current page structure, for fixing badges or menu items that stop appearing.</p>
+              <div class="row"><button class="btn btn--small" type="button" data-debug>Copy debug info</button></div>
+            </section>
+            <section class="section section--danger">
+              <h3>Danger zone</h3>
+              <p class="hint">Removes every flag and note. Blocked and muted badges come back the next time you open those accounts.</p>
+              <div class="row"><button class="btn btn--danger btn--small" type="button" data-clear>Delete all</button></div>
+            </section>
           </div>
         </div>
       </div>`);
 
     const list = wrap.querySelector('[data-list]');
     const search = wrap.querySelector('[data-search]');
+    const title = wrap.querySelector('[data-title]');
     const close = () => wrap.remove();
+    let current = 'list';
+
+    function show(v) {
+      current = v;
+      for (const node of wrap.querySelectorAll('[data-view]')) node.hidden = node.dataset.view !== v;
+      wrap.querySelector('[data-back]').hidden = v !== 'tools';
+      wrap.querySelector('[data-tools]').hidden = v === 'tools';
+      if (v === 'tools') title.textContent = 'Data & tools';
+      else { title.innerHTML = `Account flags <span class="meta">(${XF.store.count()})</span>`; search.focus(); }
+    }
 
     function render() {
       const q = search.value.trim().toLowerCase();
       const items = XF.store.all().filter((e) => !q || e.handle.toLowerCase().includes(q)
         || e.notes.some((n) => n.text.toLowerCase().includes(q) || n.link.toLowerCase().includes(q)));
-      wrap.querySelector('[data-count]').textContent = `(${XF.store.count()})`;
+      if (current === 'list') title.innerHTML = `Account flags <span class="meta">(${XF.store.count()})</span>`;
       if (!items.length) {
         list.innerHTML = `<div class="empty">${q ? 'No matches.' : 'Nothing flagged yet. Use "Flag account" in a post’s … menu, or the flag button on a profile.'}</div>`;
         return;
@@ -500,8 +543,13 @@ window.XF = window.XF || {};
 
     search.addEventListener('input', render);
     wrap.querySelector('[data-x]').addEventListener('click', close);
+    wrap.querySelector('[data-tools]').addEventListener('click', () => show('tools'));
+    wrap.querySelector('[data-back]').addEventListener('click', () => show('list'));
     wrap.addEventListener('click', (e) => { if (e.target === wrap) close(); });
-    wrap.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+    wrap.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (current === 'tools') show('list'); else close();
+    });
 
     wrap.querySelector('[data-export]').addEventListener('click', () => {
       const blob = new Blob([XF.store.exportJSON()], { type: 'application/json' });
@@ -540,7 +588,10 @@ window.XF = window.XF || {};
     });
     const clearBtn = wrap.querySelector('[data-clear]');
     clearBtn.addEventListener('click', async () => {
-      if (clearBtn.dataset.armed) { await XF.store.clear(); render(); clearBtn.textContent = 'Delete all'; delete clearBtn.dataset.armed; return; }
+      if (clearBtn.dataset.armed) {
+        await XF.store.clear(); render(); toast('Deleted all flags');
+        clearBtn.textContent = 'Delete all'; delete clearBtn.dataset.armed; return;
+      }
       clearBtn.dataset.armed = '1';
       clearBtn.textContent = 'Really delete all?';
       setTimeout(() => { delete clearBtn.dataset.armed; clearBtn.textContent = 'Delete all'; }, 4000);
@@ -548,7 +599,7 @@ window.XF = window.XF || {};
 
     render();
     root.appendChild(wrap);
-    search.focus();
+    show(view);
   }
 
   XF.ui = { init, openModal, closeModal, showTooltip, scheduleHideTooltip, hideTooltip, openManager, closeManager, toast, updateLauncher, setLauncherVisible, applyTheme, navigate };

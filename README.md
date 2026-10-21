@@ -25,7 +25,7 @@ After editing code: click the reload icon on the extension card, then reload the
 | Blocked / muted entries | Type is fixed in the modal and they can't be deleted from the extension; only unblocking/unmuting on X clears them. Notes stay editable. |
 | Unblock / unmute | Resets the entry: becomes Neutral if it has notes, removed if not. Also reconciles when a menu shows plain "Block"/"Mute" or a profile shows Follow for an entry still marked blocked/muted. |
 | Everywhere a name/handle appears | Badge: `!` yellow warning, `+` green positive, `•` gray neutral, `B` / `M` dark red for blocked/muted. Hover or click for all notes with links and dates, and an Edit button. |
-| **Flags** in the left sidebar (or ⚑ bottom-left fallback) | Search, edit, delete, Export file, Copy JSON, Import (merge or replace), Delete all. |
+| **Flags** in the left sidebar (or ⚑ bottom-left fallback) | Search, edit and delete flags. The gear opens **Data & tools**: Export file, Copy JSON, Import (merge or replace), Copy debug info, Delete all. |
 
 Links in the tooltip and manager open inside the X app (no new window) when they point at x.com; ⌘/Ctrl-click still opens a new tab. Other sites open in a new window.
 
@@ -83,7 +83,7 @@ Notes:
 3. **Flag without action**: "…" on a post → **Flag @handle** → pick Warning, add a note, Save. The menu closes, the post is not affected, and a yellow `!` badge appears next to the name. Open "…" again: the item now says **Edit flag**, opens prefilled, and has Delete. Click **+ Add note**, write a second one, Save, and check the tooltip lists both with dates.
 4. **Profile flag button**: on a profile, click ⚑ left of "…". Flag as Positive. The button turns green; the header name gets a `+` badge.
 5. **Badge in timeline**: scroll Home / search / notifications / a thread with replies / a quote of the flagged account. Badge shows next to the name in each. Hover shows the tooltip with the link clickable; click pins it; click elsewhere closes it.
-6. **Export/import**: sidebar **Flags** → Export file (downloads `x-account-flags-YYYY-MM-DD.json`) → Delete all → Import file… → entries and badges come back.
+6. **Export/import**: sidebar **Flags** → gear → Export file (downloads `x-account-flags-YYYY-MM-DD.json`) → Delete all → Import file… → entries and badges come back.
 7. **Two windows**: with the PWA and a browser tab both open, flag in one; the badge appears in the other within a few seconds.
 8. **Theme**: switch X between Light / Dim / Lights out; the modal and tooltip follow.
 
