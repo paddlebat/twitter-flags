@@ -223,9 +223,13 @@ window.XF = window.XF || {};
     if (nav) nav.title = `Account flags (${n})`;
   }
 
+  // While debugging selectors, keep the floating button on every page.
+  // Set to false to go back to showing it only when no nav entry exists.
+  const ALWAYS_SHOW_LAUNCHER = true;
+
   // The floating button is only a fallback for layouts without the sidebar nav.
   function setLauncherVisible(visible) {
-    if (launcher) launcher.style.display = visible ? '' : 'none';
+    if (launcher) launcher.style.display = (visible || ALWAYS_SHOW_LAUNCHER) ? '' : 'none';
   }
 
   function toast(msg, ms = 1800) {
