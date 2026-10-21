@@ -39,7 +39,6 @@
         "src/ui.js",
         "src/badges.js",
         "src/hooks.js",
-        "src/theme-color.js",
         "src/content.js"
       ],
       "css": [
