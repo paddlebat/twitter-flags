@@ -257,10 +257,12 @@ window.XF = window.XF || {};
       const isAction = opts.mode === 'block' || opts.mode === 'mute';
       const actionFlag = opts.mode === 'block' ? 'blocked' : 'muted';
       const types = ['warning', 'positive', 'neutral'];
-      if (!isAction && existing && (existing.flag === 'blocked' || existing.flag === 'muted')) types.push(existing.flag);
-      const flag = isAction ? actionFlag : (existing && existing.flag) || 'warning';
-      const title = opts.mode === 'block' ? `Blocked @${handle}`
-        : opts.mode === 'mute' ? `Muted @${handle}`
+      // Blocked/muted reflect X's real state: fixed here, cleared only by
+      // unblocking/unmuting on X. Notes stay editable.
+      const lockedFlag = isAction ? actionFlag
+        : (existing && (existing.flag === 'blocked' || existing.flag === 'muted')) ? existing.flag : null;
+      const flag = lockedFlag || (existing && existing.flag) || 'warning';
+      const title = lockedFlag ? `${FLAGS[lockedFlag].label} @${handle}`
         : existing ? `Edit flag for @${handle}` : `Flag @${handle}`;
       const notes = (existing && existing.notes) || [];
 
@@ -279,7 +281,7 @@ window.XF = window.XF || {};
           <div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}">
             <div class="head"><h2>${esc(title)}</h2><button class="icon-btn" type="button" data-x title="Close">✕</button></div>
             <div class="body">
-              ${isAction
+              ${lockedFlag
                 ? ''
                 : `<div class="types">${types.map((t) => `
                     <label class="type"><input type="radio" name="flag" value="${t}" ${t === flag ? 'checked' : ''}><span class="chip">${XF.dom.badgeSVG(t, 18)}</span>${FLAGS[t].label}</label>`).join('')}</div>`}
@@ -287,7 +289,7 @@ window.XF = window.XF || {};
               <div class="row"><button class="btn btn--small" type="button" data-add>+ Add note</button>${existing ? `<span class="meta">Flagged ${fmtDate(existing.createdAt)} · updated ${fmtDate(existing.updatedAt)}</span>` : ''}</div>
             </div>
             <div class="foot">
-              ${existing ? `<button class="btn btn--danger" type="button" data-delete>Delete</button>` : ''}
+              ${existing && !lockedFlag ? `<button class="btn btn--danger" type="button" data-delete>Delete</button>` : ''}
               <span class="spacer"></span>
               <span class="kbd">⌘/Ctrl+Enter saves · Esc ${isAction ? 'skips' : 'cancels'}</span>
               <button class="btn" type="button" data-skip>${isAction ? 'Skip' : 'Cancel'}</button>
@@ -313,7 +315,7 @@ window.XF = window.XF || {};
       wrap.querySelector('[data-skip]').addEventListener('click', () => done('skipped'));
       wrap.querySelector('[data-x]').addEventListener('click', () => done('skipped'));
       wrap.querySelector('[data-save]').addEventListener('click', async () => {
-        const chosen = isAction ? actionFlag : (wrap.querySelector('input[name=flag]:checked') || {}).value || flag;
+        const chosen = lockedFlag || (wrap.querySelector('input[name=flag]:checked') || {}).value || flag;
         try {
           await XF.store.save({ handle, flag: chosen, notes: collectNotes() });
           toast(`Saved ${FLAGS[chosen].label.toLowerCase()} for @${handle}`);
@@ -477,7 +479,7 @@ window.XF = window.XF || {};
           </div>
           <div class="item-actions">
             <button class="btn btn--small" type="button" data-edit>Edit</button>
-            <button class="btn btn--small btn--danger" type="button" data-del>Delete</button>
+            ${e.flag === 'blocked' || e.flag === 'muted' ? '' : `<button class="btn btn--small btn--danger" type="button" data-del>Delete</button>`}
           </div>
         </div>`).join('');
     }
