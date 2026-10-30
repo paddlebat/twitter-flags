@@ -62,7 +62,7 @@ window.XF = window.XF || {};
     }
     const unmuteEl = t.closest(sel.unmute) || t.closest(sel.profileUnmute)
       || ((t.closest(sel.mute) && isUndo(t.closest(sel.mute))) ? t.closest(sel.mute) : null)
-      || (() => { const r = t.closest('[role="menuitem"]'); return r && /^\s*unmute\b/i.test(r.textContent || '') ? r : null; })();
+      || labelledRow(t, /^\s*unmute\b/i);
     if (unmuteEl) {
       const handle = handleFromText(unmuteEl.textContent) || ctxHandle() || profileHandleFromPage();
       if (handle) setTimeout(() => resetAction(handle, 'muted'), 400);
@@ -79,7 +79,8 @@ window.XF = window.XF || {};
       return;
     }
 
-    const muteItem = t.closest(sel.mute);
+    // The tweet "…" menu's Mute row may have no testid, only its "Mute @x" label.
+    const muteItem = t.closest(sel.mute) || labelledRow(t, /^\s*mute\s+@/i);
     if (muteItem && !isUndo(muteItem)) {
       const handle = handleFromText(muteItem.textContent) || ctxHandle();
       const link = ctxLink();
@@ -131,6 +132,10 @@ window.XF = window.XF || {};
   // Never overrides a flag the user chose; blocked takes precedence over muted.
   // X may reuse the "block"/"mute" testids and only change the label to
   // "Unblock @x"/"Unmute @x", so check the label as well as the testid.
+  const labelledRow = (t, re) => {
+    const r = t.closest('[role="menuitem"]');
+    return r && re.test(r.textContent || '') ? r : null;
+  };
   const isUndo = (el) => /^\s*un(block|mute)\b/i.test(el.textContent || '');
 
   function recordExistingAction(menu, handle) {
@@ -141,8 +146,9 @@ window.XF = window.XF || {};
     const muted = !!menu.querySelector(sel.unmute) || labelled(/^\s*unmute\b/i);
     // A plain "Block …"/"Mute …" row means that action is not in effect any
     // more (undone here, on another device, or in X's settings).
-    if (labelled(/^\s*block\b/i)) resetAction(handle, 'blocked', true);
-    if (labelled(/^\s*mute\b/i)) resetAction(handle, 'muted', true);
+    // Require "@" so "Mute this conversation" doesn't count.
+    if (labelled(/^\s*block\s+@/i)) resetAction(handle, 'blocked', true);
+    if (labelled(/^\s*mute\s+@/i)) resetAction(handle, 'muted', true);
     recordState(handle, blocked, muted);
   }
 
@@ -317,9 +323,10 @@ window.XF = window.XF || {};
     if (spans.length) {
       spans[0].textContent = label;
       for (const s of spans.slice(1)) s.remove();
-    } else {
+    } else if (!svg) {
       item.textContent = label;
     }
+    // Icon-only (collapsed sidebar): keep just the icon; aria-label names it.
     return item;
   }
 
@@ -403,14 +410,19 @@ window.XF = window.XF || {};
     const nav = document.querySelector(sel.primaryNav);
     const existing = document.getElementById('xf-nav-item');
     if (!nav) { if (existing) existing.remove(); updateLauncherVisibility(); return; }
-    if (existing && existing.isConnected && nav.contains(existing)) { updateLauncherVisibility(); return; }
-    if (existing) existing.remove();
-
     const template = nav.querySelector(sel.navProfileLink) || nav.querySelector(sel.navAnyLink);
-    if (!template) { updateLauncherVisibility(); return; }
+    // X swaps between labelled and icon-only links as the window resizes;
+    // rebuild when the template's shape no longer matches our clone.
+    const shape = template ? `${!!template.querySelector('svg')}|${!!template.textContent.trim()}` : '';
+    if (existing && existing.isConnected && nav.contains(existing) && existing.dataset.xfShape === shape) {
+      updateLauncherVisibility(); return;
+    }
+    if (existing) existing.remove();
+    if (!template || !template.querySelector('svg')) { updateLauncherVisibility(); return; }
 
     const item = makeNavClone(template, 'Flags', 'xf-nav');
     item.id = 'xf-nav-item';
+    item.dataset.xfShape = shape;
     const open = (e) => { e.preventDefault(); e.stopPropagation(); XF.ui.openManager(); };
     item.addEventListener('click', open, true);
     item.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') open(e); }, true);
