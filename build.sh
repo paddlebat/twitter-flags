@@ -3,7 +3,7 @@
 # (self-distributed / unlisted signing) or for loading in Chromium browsers.
 set -e
 cd "$(dirname "$0")"
-VERSION=$(python3 -c "import json;print(json.load(open('manifest.json'))['version'])")
+VERSION=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' manifest.json | head -1)
 mkdir -p dist
 OUT="dist/x-account-flags-$VERSION.zip"
 rm -f "$OUT"
